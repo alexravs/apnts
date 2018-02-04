@@ -24,21 +24,15 @@ const rangeTimes = [
     {start: '18', end: '20'}
 ]
 
-class Calendar extends Component {
-    state = {
-        currentWeek: getCurrentWeek()
-    }
 
-    previousWeek = () => this.setState({ currentWeek: this.state.currentWeek - 1 })
+// will be done once, results will be stored in the store.
+const groupAppointmentDates = () => {
+    return groupBy(appointmentDates, date => `${date.startdate}-${date.enddate}`)
+}
 
-    nextWeek = () => this.setState({ currentWeek: this.state.currentWeek + 1 })
-
-    groupAppointmentDates = () => {
-        return groupBy(appointmentDates, date => `${date.startdate}-${date.enddate}`)
-    }
-
+class AppointmentsRow extends Component {
     renderAppointmentInfos = (appointmentKey) => {
-        const dates = this.groupAppointmentDates();
+        const dates = groupAppointmentDates();
         const appointments = dates[appointmentKey];
 
         return appointments ? appointments.length : 0;
@@ -48,6 +42,35 @@ class Calendar extends Component {
         const day = date.format('DD/MM/YYYY')
         return `${day}:${rangeTime.start}-${day}:${rangeTime.end}`;
     }
+
+   render() {
+       const {rangeTime, weekDays} = this.props;
+        return (
+            <tr>
+                <td>
+                    {rangeTime.start}-{rangeTime.end}
+                </td>
+                {weekDays.map(day => (
+                    <td>
+                        {this.renderAppointmentInfos(this.getAppointmentKey(rangeTime, day))}
+                    </td>
+                ))}
+            </tr>
+        )
+   } 
+}
+
+class Calendar extends Component {
+    state = {
+        currentWeek: getCurrentWeek()
+    }
+
+    previousWeek = () => this.setState({ currentWeek: this.state.currentWeek - 1 })
+
+    nextWeek = () => this.setState({ currentWeek: this.state.currentWeek + 1 })
+
+
+
 
     render() {
         const weekDays = getWeekDays(this.state.currentWeek);
@@ -67,16 +90,13 @@ class Calendar extends Component {
                     </thead>
                     <tbody>
                         {rangeTimes.map(rangeTime => (
-                            <tr>
-                                <td>{rangeTime.start}-{rangeTime.end}</td>
-                                {weekDays.map(day => (<td>{this.renderAppointmentInfos(this.getAppointmentKey(rangeTime, day))}</td>))}
-                            </tr>
+                            <AppointmentsRow rangeTime={rangeTime} weekDays={weekDays} />
                         ))}
                     </tbody>
                 </table>
             </div>
         );
-  }
+    }
 }
 
  export default Calendar;
